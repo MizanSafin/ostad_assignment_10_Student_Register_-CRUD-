@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken")
 const StudentsModel = require("../models/StudentsModel")
+const OTPModel = require("../models/OTPModel")
+const SendEmailUtility = require("../utility/SendEmailUtility")
 
 //Create Students
 exports.createStudentProfile = async (req, res) => {
@@ -84,5 +86,70 @@ exports.readAllStudentsProfiles = async (req, res) => {
     }
   } catch (e) {
     res.status(401).json({ status: "fail", data: e.toString() })
+  }
+}
+
+//===========  Reset Password ::  ===============//
+
+exports.RecoverVerifyEmail = async (req, res) => {
+  let email = req.params.email
+  let OTPCode = Math.floor(100000 + Math.random() * 900000)
+  let EmailText = "Your Verification Code is =" + OTPCode
+  let EmailSubject = "Task manager verification code"
+  let status = 0
+
+  let result = await StudentsModel.find({ email: email }).count()
+  if (result === 1) {
+    // Verification Email
+    await SendEmailUtility(email, EmailText, EmailSubject)
+    await OTPModel.create({ email: email, otp: OTPCode, status: status })
+    res.status(200).json({
+      status: "success",
+      data: "6 Digit Verification Code has been send",
+    })
+  } else {
+    res.status(200).json({ status: "fail", data: "No User Found" })
+  }
+}
+
+exports.RecoverVerifyOTP = async (req, res) => {
+  let email = req.params.email
+  let OTPCode = req.params.otp
+  let status = 0
+  let statusUpdate = 1
+
+  let result = await OTPModel.find({
+    email: email,
+    otp: OTPCode,
+    status: status,
+  }).count()
+  // Time Validation 2 min
+  if (result === 1) {
+    await OTPModel.updateOne(
+      { email: email, otp: OTPCode, status: status },
+      { status: statusUpdate }
+    )
+    res.status(200).json({ status: "success", data: "Verification Completed" })
+  } else {
+    res.status(200).json({ status: "fail", data: "Invalid Verification" })
+  }
+}
+
+exports.RecoverResetPass = async (req, res) => {
+  let email = req.body["email"]
+  let OTPCode = req.body["OTP"]
+  let NewPass = req.body["password"]
+  let statusUpdate = 1
+
+  let result = await OTPModel.find({
+    email: email,
+    otp: OTPCode,
+    status: statusUpdate,
+  }).count()
+  if (result === 1) {
+    await StudentsModel.updateOne({ email: email }, { password: NewPass })
+    res.status(200).json({ status: "success", data: "Password Reset Success" })
+  } else {
+    res.status(200).json({ status: "fail", data: "Invalid Verification" })
   }
 }

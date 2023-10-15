@@ -6,6 +6,9 @@ const {
   updateStudentProfile,
   deleteStudentProfile,
   readAllStudentsProfiles,
+  RecoverVerifyEmail,
+  RecoverVerifyOTP,
+  RecoverResetPass,
 } = require("../controllers/StudentsController")
 const AuthVerifyMiddleware = require("../middleware/AuthVerifyMiddleware")
 const {
@@ -14,12 +17,18 @@ const {
   deleteStudentWorks,
   updateStudentWorks,
 } = require("../controllers/WorksController")
+
 const router = express.Router()
 
 //StudentProfile routes
 router.get("/readAllStudentsProfiles", readAllStudentsProfiles)
 router.post("/createStudentProfile", createStudentProfile)
 router.post("/Login", Login)
+////Reset password routing :
+router.get("/RecoverVerifyEmail/:email", RecoverVerifyEmail)
+router.get("/RecoverVerifyOTP/:email/:otp", RecoverVerifyOTP)
+router.post("/RecoverResetPass", RecoverResetPass)
+//Other Student routing
 router.get("/readStudentProfile", AuthVerifyMiddleware, readStudentProfile)
 router.post("/updateStudentProfile", AuthVerifyMiddleware, updateStudentProfile)
 router.get("/deleteStudentProfile", AuthVerifyMiddleware, deleteStudentProfile)
